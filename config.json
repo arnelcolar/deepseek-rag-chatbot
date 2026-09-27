@@ -1,0 +1,17 @@
+{
+  "name": "Manual Assistant",
+  "document": "the service manual",
+  "greeting": "How can I help?",
+  "tagline": "Answers come only from the service manual, with page numbers.",
+  "placeholder": "Ask about a spec, procedure, or diagram…",
+  "logo": "/static/logo.svg",
+  "min_relevance": -4.0,
+  "suggestions": [
+    ["Show me the under-dash fuse box diagram", "Diagram · p. 1054"],
+    ["How do I adjust the timing belt tension?", "Engine · p. 92"],
+    ["What is the spark plug gap?", "Ignition · p. 1128"],
+    ["What are the valve clearance specs?", "Engine · p. 84"],
+    ["How do I bleed the brakes?", "Brakes"],
+    ["What is the maintenance schedule?", "Maintenance · p. 35"]
+  ]
+}

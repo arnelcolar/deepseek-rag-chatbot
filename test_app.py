@@ -32,6 +32,8 @@ import app  # builds the index for the stand-in manual
 assert os.path.exists(os.path.join(os.environ["DB_DIR"], "done"))
 client = TestClient(app.app)
 assert client.get("/").status_code == 200
+cfg = client.get("/config").json()
+assert cfg["name"] and cfg["suggestions"] and "min_relevance" not in cfg, cfg
 
 chain = app.qa_chain
 chain.retriever = chain.retriever.base_retriever  # skip the cloud reranker
@@ -40,13 +42,18 @@ assert label.startswith("[Page 1 | 1 image(s)"), label
 
 chain.combine_documents_chain.llm_chain.llm = FakeListLLM(responses=["The relay layout is on page 1."])
 r = client.post("/ask", json={"query": "show me the wiring diagram"}).json()
-assert [i["caption"] for i in r["images"]] == ["Manual page 1 (scanned)"], r["images"]  # one image, logo filtered out
+assert [i["caption"] for i in r["images"]] == ["Page 1"], r["images"]  # one image, logo filtered out
 
 chain.combine_documents_chain.llm_chain.llm = FakeListLLM(responses=["Remove the relay as shown (page 1)."])
 r = client.post("/ask", json={"query": "how do I replace the relay?"}).json()
-assert [i["caption"] for i in r["images"]] == ["Manual page 1 (scanned)"], "how-to answers show cited pages"
+assert [i["caption"] for i in r["images"]] == ["Page 1"], "how-to answers show cited pages"
 
 chain.combine_documents_chain.llm_chain.llm = FakeListLLM(responses=[app.REFUSAL])
 r = client.post("/ask", json={"query": "show me the diagram of the moon"}).json()
 assert r["images"] == [], "refusal must not show images"
+app.CHAT_PASSWORD = "s3cret"
+assert client.get("/").status_code == 401, "password required when set"
+assert client.get("/", auth=("anyone", "wrong")).status_code == 401
+assert client.get("/", auth=("anyone", "s3cret")).status_code == 200
+app.CHAT_PASSWORD = None
 print("all checks passed")
