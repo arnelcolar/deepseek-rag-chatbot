@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Accord Service Manual</title>
-<link rel="icon" href="/static/honda.svg" type="image/svg+xml">
+<title>Assistant</title>
+<link rel="icon" id="favicon" href="/static/logo.svg" type="image/svg+xml">
 <script src="/static/vendor/marked.min.js"></script>
 <script src="/static/vendor/purify.min.js"></script>
 <style>
@@ -36,7 +36,8 @@
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; }
   .brand { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 14px; }
   .mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--foreground); color: var(--background); }
-  .mark svg { width: 19px; height: 19px; }
+  /* The logo is drawn as a mask in the theme colour, so any single-colour SVG or transparent PNG adapts to dark mode */
+  .mark i { display: block; width: 19px; height: 19px; background: currentColor; -webkit-mask: var(--logo) center / contain no-repeat; mask: var(--logo) center / contain no-repeat; }
   .ghost { border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: 4px 10px; font-size: 13px; }
   .ghost:hover { background: var(--muted); }
   body:not(.chatting) #new-chat { visibility: hidden; }
@@ -48,7 +49,7 @@
   body.chatting #welcome { display: none; }
   #welcome .hero { text-align: center; }
   #welcome .hero .mark { width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 18px; }
-  #welcome .hero .mark svg { width: 40px; height: 40px; }
+  #welcome .hero .mark i { width: 36px; height: 36px; }
   #welcome h1 { margin: 0; line-height: 1.25; font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
   #welcome p { margin: 6px 0 0; color: var(--muted-foreground); }
 
@@ -102,23 +103,22 @@
 </style>
 </head>
 <body>
-<svg style="display:none"><symbol id="honda" viewBox="371.72227 8.8561916 533.53363 377.90768"><path fill="currentColor" d="m 440.67452,386.32948 c -0.53227,-0.23191 -1.15706,-0.83713 -1.38843,-1.34493 -0.47215,-1.03625 -8.05924,-42.39744 -27.37737,-149.24837 -6.0794,-33.62589 -22.96816,-127.0835 -24.3453,-134.72 -0.77761,-4.311998 -2.35064,-13.023998 -3.49562,-19.359998 -2.07309,-11.47196 -4.036,-22.39551 -9.48221,-52.76836 -1.57483,-8.7826 -2.86332,-16.46167 -2.86332,-17.06461 0,-1.63574 1.44486,-2.9670204 3.22013,-2.9670204 1.94166,0 32.96242,4.7804004 38.28151,5.8993104 6.3755,1.34112 10.16473,3.92889 13.11047,8.95348 1.59464,2.72 7.11153,14.53092 24.75036,52.9872 26.21474,57.153528 34.82449,73.447548 46.80096,88.571248 3.95953,5.00003 12.09798,13.15245 16.39657,16.42473 17.1408,13.04832 35.10973,18.93354 64.8,21.22343 35.74753,2.75706 101.86199,2.26471 129.12,-0.96155 32.31459,-3.82476 53.51944,-14.7612 70.99902,-36.61786 11.74885,-14.69089 20.7907,-31.75874 46.27457,-87.350248 19.83817,-43.27578 24.40949,-52.98475 26.1623,-55.56588 1.49595,-2.20288 3.54732,-4.17362 5.5443,-5.32636 3.24175,-1.87127 6.79237,-2.57658 34.18478,-6.79064 11.02745,-1.6964704 11.82179,-1.7374704 13.05719,-0.6739204 1.54195,1.3274504 2.22508,-3.08581 -9.98511,64.5070504 -1.12866,6.248 -5.01492,27.775998 -8.63613,47.839998 -6.71501,37.20575 -10.45723,57.90673 -19.23449,106.4 -2.72368,15.048 -6.17701,34.128 -7.67406,42.4 -4.68144,25.86744 -17.95958,98.87014 -19.2948,106.08206 -0.70078,3.78514 -1.41139,7.24114 -1.57913,7.68 -0.35836,0.93757 -1.22992,1.76068 -2.16506,2.04471 -0.60985,0.18523 -16.7808,-1.27817 -40.3001,-3.64699 -10.04027,-1.01123 -12.55116,-1.55444 -14.83608,-3.20963 -2.12538,-1.53961 -3.6119,-4.25512 -6.8801,-12.56827 -17.75874,-45.172 -18.55389,-47.1292 -22.27597,-54.83095 -3.41909,-7.07481 -5.60457,-10.83141 -8.83653,-15.18903 -8.80363,-11.86984 -21.0345,-18.78459 -38.3646,-21.68953 -13.73206,-2.30183 -34.73508,-3.37697 -65.92,-3.37444 -24.95071,0.002 -38.4583,0.48211 -54.24,1.92781 -26.83174,2.45795 -40.92315,9.63252 -52.11529,26.53426 -5.17701,7.81803 -8.40884,14.9277 -18.98096,41.75595 -3.50334,8.89023 -7.88886,20.01075 -9.7456,24.71226 -3.55707,9.00701 -4.79324,11.25392 -7.05124,12.8165 -1.47179,1.01852 -3.30391,1.69353 -5.78757,2.13233 -1.53845,0.27181 -47.78476,4.84849 -48.60831,4.81043 -0.14906,-0.007 -0.70652,-0.20227 -1.23878,-0.43417 z"/></symbol></svg>
 
 <header>
-  <div class="brand"><span class="mark"><svg><use href="#honda"/></svg></span>Accord Service Manual</div>
+  <div class="brand"><span class="mark"><i></i></span><span id="brand-name"></span></div>
   <button id="new-chat" class="ghost" type="button">New chat</button>
 </header>
 
 <div id="scroll">
   <div class="column" id="welcome">
     <div class="hero">
-      <div class="mark"><svg><use href="#honda"/></svg></div>
-      <h1>How can I help with your Accord?</h1>
-      <p>Answers come from the Honda Accord 1994–1997 service manual, with page numbers.</p>
+      <div class="mark"><i></i></div>
+      <h1 id="greeting"></h1>
+      <p id="tagline"></p>
     </div>
     <form id="composer">
       <label class="sr-only" for="q">Question</label>
-      <textarea id="q" rows="1" placeholder="Ask about a spec, procedure, or diagram…" autofocus></textarea>
+      <textarea id="q" rows="1" autofocus></textarea>
       <div class="bar">
         <span class="hint">Enter to send · Shift+Enter for a new line</span>
         <button id="send" type="submit" aria-label="Send message" disabled>
@@ -133,30 +133,30 @@
 <div id="dock"><div class="column" id="dock-slot"></div></div>
 
 <script>
-// Each topic was checked against the manual's text; the note shows where it lives
-const SUGGESTIONS = [
-  ["Show me the under-dash fuse box diagram", "Diagram · p. 1054"],
-  ["How do I adjust the timing belt tension?", "Engine · p. 92"],
-  ["What is the spark plug gap?", "Ignition · p. 1128"],
-  ["What are the valve clearance specs?", "Engine · p. 84"],
-  ["How do I bleed the brakes?", "Brakes"],
-  ["What is the maintenance schedule?", "Maintenance · p. 35"],
-];
-
 const $ = (s) => document.querySelector(s);
 const welcome = $("#welcome"), thread = $("#thread"), scroller = $("#scroll");
 const form = $("#composer"), q = $("#q"), send = $("#send"), dockSlot = $("#dock-slot");
 let busy = false;
 
-for (const [question, where] of SUGGESTIONS) {
-  const li = document.createElement("li");
-  const b = document.createElement("button");
-  b.type = "button";
-  b.append(question, Object.assign(document.createElement("small"), { textContent: where }));
-  b.onclick = () => ask(question);
-  li.append(b);
-  $("#suggestions").append(li);
-}
+// Name, logo, and suggested questions come from config.json on the server
+fetch("/config").then((r) => r.json()).then((c) => {
+  document.title = c.name;
+  $("#brand-name").textContent = c.name;
+  $("#greeting").textContent = c.greeting;
+  $("#tagline").textContent = c.tagline;
+  q.placeholder = c.placeholder;
+  document.documentElement.style.setProperty("--logo", `url("${c.logo}")`);
+  $("#favicon").href = c.logo;
+  for (const [question, where] of c.suggestions) {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.append(question, Object.assign(document.createElement("small"), { textContent: where }));
+    b.onclick = () => ask(question);
+    li.append(b);
+    $("#suggestions").append(li);
+  }
+});
 
 function sync() {
   send.disabled = busy || !q.value.trim();

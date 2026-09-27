@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 import re
 import secrets
@@ -19,11 +20,15 @@ from langchain_classic.retrievers import ContextualCompressionRetriever
 from langchain_core.documents.compressor import BaseDocumentCompressor
 from langchain_core.prompts import PromptTemplate
 
+HERE = os.path.dirname(__file__)
+# Everything specific to one document (name, logo, suggested questions, relevance cut-off) lives in config.json
+CONFIG = json.load(open(os.environ.get("CHAT_CONFIG", os.path.join(HERE, "config.json"))))
+
 NVIDIA_API_KEY = os.environ["NVIDIA_API_KEY"]
 CHAT_PASSWORD = os.environ.get("CHAT_PASSWORD")  # set it to require a password (any username) before the page loads
 REFUSAL = "I am sorry, but I can only answer questions using our official documentation."
 
-template = """You are a strict, secure document-compliance assistant for the Honda Accord 1994-1997 Service Manual. Your sole job is to answer questions strictly using the provided document context below.
+template = """You are a strict, secure document-compliance assistant for """ + CONFIG["document"] + """. Your sole job is to answer questions strictly using the provided document context below.
 
 CRITICAL SECURITY RULES:
 1. NEVER answer general knowledge questions (e.g., politics, history, geography, trivia) unless explicitly written in the document context.
@@ -33,7 +38,7 @@ CRITICAL SECURITY RULES:
 ANSWERING RULES:
 4. Each context excerpt starts with its page number and how many images that page contains. Cite the page numbers you used, e.g. "(page 4)". Never mention image counts in your answer.
 5. If the question asks to see a diagram, image, figure, chart, or table, answer from what the context says about it and name the page it is on. The application displays that page's images below your answer, so never refuse only because you cannot see the image itself.
-6. The context is OCR text from scanned pages and may contain recognition errors (e.g. "inte" for "into"). Read through obvious typos, but copy numbers such as torque specs, clearances, and part numbers exactly as written.
+6. The context may be OCR text from scanned pages and contain recognition errors (e.g. "inte" for "into"). Read through obvious typos, but copy numbers such as specifications, measurements, prices, and part numbers exactly as written.
 
 Context:
 {context}
@@ -103,7 +108,7 @@ visual_keywords = [
     "caption", "legend", "annotation", "callout", "label",
 ]
 
-# How-to questions: every procedure page in this manual is a scan whose illustrations show the steps
+# How-to questions: manual pages that describe a procedure usually carry the illustrations for its steps
 procedure_pattern = re.compile(
     r"\bhow (do|to|can|should|would)\b|\bsteps?\b|\bprocedure\b|"
     r"\b(replac|remov|install|adjust|bleed|inspect|repair|disassembl|assembl|overhaul|tighten|disconnect|reconnect)\w*"
@@ -142,13 +147,12 @@ MIN_IMAGE_PX = 100  # skip logos, icons, and bullets smaller than this on either
 def page_images(pdf_document, page_num):
     return [img[0] for img in pdf_document[page_num].get_images(full=True) if min(img[2], img[3]) >= MIN_IMAGE_PX]
 
-HERE = os.path.dirname(__file__)
 MANUAL_PDF = os.environ.get("MANUAL_PDF", os.path.join(HERE, "manual.pdf"))
 DB_DIR = os.environ.get("DB_DIR", os.path.join(HERE, "chroma_db"))
 
 
 def load_vector_store():
-    # The index is built once (a few minutes for 1,379 pages) and reused on later starts
+    # The index is built once (about five minutes for a 1,400-page PDF) and reused on later starts
     if os.path.exists(os.path.join(DB_DIR, "done")):
         return Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
     shutil.rmtree(DB_DIR, ignore_errors=True)  # leftover from an interrupted build
@@ -193,7 +197,7 @@ async def require_password(request: Request, call_next):
             except Exception:
                 pass
         if not ok:
-            return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="Accord service manual"'})
+            return Response(status_code=401, headers={"WWW-Authenticate": f'Basic realm="{CONFIG["name"]}"'})
     return await call_next(request)
 
 
@@ -205,13 +209,18 @@ def index():
     return FileResponse(os.path.join(HERE, "static", "index.html"))
 
 
+@app.get("/config")
+def public_config():
+    return {k: CONFIG[k] for k in ("name", "greeting", "tagline", "placeholder", "logo", "suggestions")}
+
+
 class Question(BaseModel):
     query: str = Field(min_length=1, max_length=1000)
 
 
-# Reranker relevance below this means no page in the manual is about the question (measured: manual
-# questions scored -2.9 or higher, off-topic ones -4.5 or lower), so refuse before calling the LLM
-MIN_RELEVANCE = -4.0
+# Reranker relevance below this means no page is about the question, so refuse before calling the LLM.
+# Tune it per document: on the test manual, real questions scored -2.9 or higher and off-topic ones -4.5 or lower.
+MIN_RELEVANCE = CONFIG["min_relevance"]
 
 
 def extract_images(page_nums):
@@ -224,7 +233,7 @@ def extract_images(page_nums):
                 seen.add(xref)
                 base_image = pdf_document.extract_image(xref)
                 data = base64.b64encode(base_image["image"]).decode()
-                images.append({"src": f"data:image/{base_image['ext']};base64,{data}", "caption": f"Manual page {page_num + 1} (scanned)"})
+                images.append({"src": f"data:image/{base_image['ext']};base64,{data}", "caption": f"Page {page_num + 1}"})
     return images
 
 
