@@ -13,6 +13,15 @@ Open http://localhost:8000. The first start builds the search index in `chroma_d
 
 Get a free key at https://build.nvidia.com. Never put it in the code: pass it as the `NVIDIA_API_KEY` environment variable (or a host "secret").
 
+## Share it from your computer (free tunnel)
+
+```bash
+cp .env.example .env   # then put your key (and a password) in .env
+./run-public.sh
+```
+
+It starts the server and a Cloudflare quick tunnel, then prints a `https://....trycloudflare.com` link anyone can open. Visitors are asked for `CHAT_PASSWORD` (any username). The link works only while this runs and changes each time. Needs `cloudflared` on your PATH.
+
 ## Test
 
 ```bash

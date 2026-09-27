@@ -49,4 +49,9 @@ assert [i["caption"] for i in r["images"]] == ["Manual page 1 (scanned)"], "how-
 chain.combine_documents_chain.llm_chain.llm = FakeListLLM(responses=[app.REFUSAL])
 r = client.post("/ask", json={"query": "show me the diagram of the moon"}).json()
 assert r["images"] == [], "refusal must not show images"
+app.CHAT_PASSWORD = "s3cret"
+assert client.get("/").status_code == 401, "password required when set"
+assert client.get("/", auth=("anyone", "wrong")).status_code == 401
+assert client.get("/", auth=("anyone", "s3cret")).status_code == 200
+app.CHAT_PASSWORD = None
 print("all checks passed")

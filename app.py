@@ -1,11 +1,12 @@
 import base64
 import os
 import re
+import secrets
 import shutil
 
 import fitz  # PyMuPDF for image extraction
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from langchain_community.document_loaders import PyMuPDFLoader
@@ -19,6 +20,7 @@ from langchain_core.documents.compressor import BaseDocumentCompressor
 from langchain_core.prompts import PromptTemplate
 
 NVIDIA_API_KEY = os.environ["NVIDIA_API_KEY"]
+CHAT_PASSWORD = os.environ.get("CHAT_PASSWORD")  # set it to require a password (any username) before the page loads
 REFUSAL = "I am sorry, but I can only answer questions using our official documentation."
 
 template = """You are a strict, secure document-compliance assistant for the Honda Accord 1994-1997 Service Manual. Your sole job is to answer questions strictly using the provided document context below.
@@ -179,6 +181,22 @@ qa_chain = RetrievalQA.from_chain_type(
 )
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)  # no public API explorer
+
+
+@app.middleware("http")
+async def require_password(request: Request, call_next):
+    if CHAT_PASSWORD:
+        auth, ok = request.headers.get("authorization", ""), False
+        if auth.startswith("Basic "):
+            try:
+                ok = secrets.compare_digest(base64.b64decode(auth[6:]).decode().partition(":")[2], CHAT_PASSWORD)
+            except Exception:
+                pass
+        if not ok:
+            return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="Accord service manual"'})
+    return await call_next(request)
+
+
 app.mount("/static", StaticFiles(directory=os.path.join(HERE, "static")), name="static")
 
 
