@@ -147,7 +147,7 @@ MIN_IMAGE_PX = 100  # skip logos, icons, and bullets smaller than this on either
 def page_images(pdf_document, page_num):
     return [img[0] for img in pdf_document[page_num].get_images(full=True) if min(img[2], img[3]) >= MIN_IMAGE_PX]
 
-MANUAL_PDF = os.environ.get("MANUAL_PDF", os.path.join(HERE, "manual.pdf"))
+MANUAL_PDF = os.environ.get("MANUAL_PDF", os.path.join(HERE, "sample-manual.pdf"))
 DB_DIR = os.environ.get("DB_DIR", os.path.join(HERE, "chroma_db"))
 
 

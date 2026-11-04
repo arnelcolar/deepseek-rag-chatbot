@@ -2,6 +2,8 @@
 
 A support chat that answers only from one document you give it, such as a product manual, a policy handbook, or an FAQ. It cites page numbers, shows the page when a diagram or how-to question needs it, and refuses anything the document doesn't cover. DeepSeek (via NVIDIA's free API catalog) writes the answers.
 
+The repo ships `sample-manual.pdf`, six fictional pages, so it runs out of the box. The 1,379-page vehicle manual it was built and measured against is not redistributable and is not included.
+
 ## Run
 
 ```bash
@@ -13,7 +15,7 @@ Open http://localhost:8000. Get a free key at https://build.nvidia.com. Never pu
 
 ## Use it for your own document
 
-1. Replace `manual.pdf` with your PDF (or point `MANUAL_PDF` at it).
+1. Point `MANUAL_PDF` at your PDF. The bundled `sample-manual.pdf` is fictional filler; `MANUAL_PDF=/path/to/yours.pdf python3 -m uvicorn app:app --port 8000` overrides it.
 2. Delete `chroma_db/`. The first start rebuilds the search index (about five minutes for 1,400 pages); later starts take about ten seconds.
 3. Edit `config.json`:
    - `name`, `greeting`, `tagline`, `placeholder`: the text on the chat page.
