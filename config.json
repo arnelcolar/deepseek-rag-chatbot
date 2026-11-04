@@ -7,11 +7,29 @@
   "logo": "/static/logo.svg",
   "min_relevance": -4.0,
   "suggestions": [
-    ["Show me the under-dash fuse box diagram", "Diagram · p. 1054"],
-    ["How do I adjust the timing belt tension?", "Engine · p. 92"],
-    ["What is the spark plug gap?", "Ignition · p. 1128"],
-    ["What are the valve clearance specs?", "Engine · p. 84"],
-    ["How do I bleed the brakes?", "Brakes"],
-    ["What is the maintenance schedule?", "Maintenance · p. 35"]
+    [
+      "What is the maintenance schedule?",
+      "Maintenance · p. 1"
+    ],
+    [
+      "What are the valve clearance specs?",
+      "Engine · p. 2"
+    ],
+    [
+      "What is the spark plug gap?",
+      "Ignition · p. 2"
+    ],
+    [
+      "How do I adjust the timing belt tension?",
+      "Engine · p. 3"
+    ],
+    [
+      "How do I bleed the brakes?",
+      "Brakes · p. 4"
+    ],
+    [
+      "Show me the under-dash fuse box diagram",
+      "Diagram · p. 5"
+    ]
   ]
 }

@@ -22,7 +22,7 @@ Open http://localhost:8000. Get a free key at https://build.nvidia.com. Never pu
    - `document`: how the prompt names the source, e.g. "the Acme Router X2 user guide".
    - `logo`: a single-colour SVG or transparent PNG in `static/`. The page paints it in the theme colour.
    - `suggestions`: starter questions as `[question, note]` pairs. Pick ones the document answers.
-   - `min_relevance`: questions whose best-matching passage scores below this are refused before the model sees them. `-4.0` suited the test manual (real questions scored -2.9 or higher, off-topic ones -4.5 or lower); check a few of your own questions and adjust.
+   - `min_relevance`: questions whose best-matching passage scores below this are refused before the model sees them. The shipped `-4.0` was calibrated on the 1,379-page manual (real questions scored -2.9 or higher, off-topic ones -4.5 or lower). A six-page sample scores differently, so if the demo refuses everything, raise it; if it answers anything, lower it. Check a few of your own questions and adjust.
 
 Set `CHAT_CONFIG` to use a config file somewhere else.
 
