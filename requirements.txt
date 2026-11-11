@@ -7,7 +7,7 @@ langchain-core==1.6.5
 langchain-huggingface==1.2.2
 langchain-nvidia-ai-endpoints==1.4.3
 langchain-text-splitters==1.1.2
-pillow==12.3.0
+pillow==13.0.0
 pydantic==2.13.5
 pymupdf==1.28.2
 requests==2.33.1

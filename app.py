@@ -24,7 +24,9 @@ HERE = os.path.dirname(__file__)
 # Everything specific to one document (name, logo, suggested questions, relevance cut-off) lives in config.json
 CONFIG = json.load(open(os.environ.get("CHAT_CONFIG", os.path.join(HERE, "config.json"))))
 
-NVIDIA_API_KEY = os.environ["NVIDIA_API_KEY"]
+NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY")
+if not NVIDIA_API_KEY:
+    raise SystemExit("NVIDIA_API_KEY is not set. Put it in .env (see .env.example) or export it.")
 CHAT_PASSWORD = os.environ.get("CHAT_PASSWORD")  # set it to require a password (any username) before the page loads
 REFUSAL = "I am sorry, but I can only answer questions using our official documentation."
 
@@ -89,7 +91,7 @@ blacklisted_terms = [
     "life or death", "urgent override",
     "critical override", "priority override",
     # Conversation resets
-    "start over", "reset conversation", "clear context",
+    "reset conversation", "clear context",
     "forget everything", "wipe memory", "new conversation",
     "end of system", "begin user", "end of user",
 ]
@@ -133,7 +135,12 @@ reranker = NVIDIARerank(model="nvidia/llama-nemotron-rerank-vl-1b-v2", api_key=N
 
 
 class SafeRerank(BaseDocumentCompressor):
-    """Rerank with NVIDIA; if the endpoint fails (NVIDIA retires models), keep the top 5 search hits."""
+    """Rerank with NVIDIA; if the endpoint fails (NVIDIA retires models), keep the top 5 search hits.
+
+    shortcut: the fallback returns documents with no relevance_score, so ask()'s MIN_RELEVANCE
+    gate is skipped and the prompt's own refusal is the only guard. Give the fallback a score
+    before claiming off-topic questions never reach the model.
+    """
 
     def compress_documents(self, documents, query, callbacks=None):
         try:
@@ -155,7 +162,9 @@ def load_vector_store():
     # The index is built once (about five minutes for a 1,400-page PDF) and reused on later starts
     if os.path.exists(os.path.join(DB_DIR, "done")):
         return Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
-    shutil.rmtree(DB_DIR, ignore_errors=True)  # leftover from an interrupted build
+    # Only a half-built Chroma store is safe to delete; DB_DIR may point at a real directory
+    if os.path.exists(os.path.join(DB_DIR, "chroma.sqlite3")):
+        shutil.rmtree(DB_DIR, ignore_errors=True)
 
     docs = PyMuPDFLoader(MANUAL_PDF).load()
     chunks = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150).split_documents(docs)

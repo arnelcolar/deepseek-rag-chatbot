@@ -56,4 +56,13 @@ assert client.get("/").status_code == 401, "password required when set"
 assert client.get("/", auth=("anyone", "wrong")).status_code == 401
 assert client.get("/", auth=("anyone", "s3cret")).status_code == 200
 app.CHAT_PASSWORD = None
+
+# A DB_DIR that is not a Chroma store must survive a rebuild
+keep = os.path.join(tmp, "keep")
+os.makedirs(keep, exist_ok=True)
+open(os.path.join(keep, "important.txt"), "w").close()
+app.DB_DIR = keep
+app.load_vector_store()
+assert os.path.exists(os.path.join(keep, "important.txt")), "must not delete a directory that is not a Chroma store"
+
 print("all checks passed")

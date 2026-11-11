@@ -10,5 +10,9 @@ if [ -f .env ]; then set -a; . ./.env; set +a; fi
 python3 -m uvicorn app:app --port 8000 &
 server=$!
 trap 'kill $server 2>/dev/null' EXIT
-until curl -s -o /dev/null localhost:8000; do sleep 1; done  # wait for the index to load
+for _ in $(seq 300); do  # the first start builds the index, which can take minutes
+  kill -0 "$server" 2>/dev/null || { echo "Server exited before it was ready." >&2; exit 1; }
+  curl -s -o /dev/null localhost:8000 && break
+  sleep 1
+done
 cloudflared tunnel --no-autoupdate --url http://localhost:8000
